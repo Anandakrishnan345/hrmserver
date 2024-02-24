@@ -1,5 +1,7 @@
-const { response } = require("express");
 
+let  error_function  = require('../Utils/response-handler').error_function;
+let success_function = require('../Utils/response-handler').error_function;
+const users = require('../db/models/users');
 exports.login = async function (req,res){
     try{
         let email = req.body.email;
@@ -54,6 +56,13 @@ exports.login = async function (req,res){
                 return;
             }
 
+        }
+    }catch (error) {
+        if(process.env.NODE_ENV =="prouction"){
+            let response = error_function({
+                status :400,
+                message: error ?error.message?error.message : error:"something went wrong",
+            });
         }
     }
 }
