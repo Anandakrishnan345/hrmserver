@@ -9,22 +9,28 @@ exports.login = async function (req,res){
     try{
         let email = req.body.email;
         let password = req.body.password;
-        console.log('Login request received:', { email, password });
+        console.log('Login request received:', email, password );
+        console.log("email",email);
+        console.log("password",password)
         if(email && password){
-            let user = await users.findOne({$and: [{email : email}],}).populate("user_type");
+            let user = await users.findOne({email});
+            console.log("user",user);
             if(!user){
                 let response = error_function(
                     {
-                        "status":400,
-                        "message" : "email invalid"
+                        statusCode:400,
+                        message : "email invalid"
 
                     }
                 );
+                console.log('response',response)
                 res.status(response.statusCode).send(response);
                 return;
             }
-            let user_type = user.user_type.user_type;
+            // let user_type = user.user_type.user_type;
             if(user){
+                let db_password=user.password;
+                console.log("db_pasword",db_password)
                 console.log('Before bcrypt.compare block');
                 bcrypt.compare(password,user.password,async(error,auth)=>{
                     console.log('Inside bcrypt.compare block');
@@ -40,7 +46,7 @@ exports.login = async function (req,res){
                       console.log('Password comparison result:', auth);
                     if(auth=== true){
                         let access_token = jwt.sign(
-                            {user_id : user_id},
+                            {user_id : user.user_id},
                             process.env.PRIVATE_KEY,
                             {expiresIn : "10d"}
                         );
@@ -75,7 +81,7 @@ exports.login = async function (req,res){
         }
     } catch (error) {
         console.error("An error occurred during login:", error);
-        console.log("Axios response:", error.response); // Add this line to log the Axios response details
+        console.log("Axios response:", error.response); 
     
         let response = error_function({
             status: 500,
