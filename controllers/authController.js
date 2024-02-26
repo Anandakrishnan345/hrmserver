@@ -1,13 +1,17 @@
 
 let  error_function  = require('../Utils/response-handler').error_function;
-let success_function = require('../Utils/response-handler').error_function;
+let success_function = require('../Utils/response-handler').success_function;
 const users = require('../db/models/users');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 exports.login = async function (req,res){
+    console.log('Login function entered');
     try{
         let email = req.body.email;
-        let password = req.body.password
+        let password = req.body.password;
+        console.log('Login request received:', { email, password });
         if(email && password){
-            let user = await users.findone({$and: [{email : email}],}).populate("user_type");
+            let user = await users.findOne({$and: [{email : email}],}).populate("user_type");
             if(!user){
                 let response = error_function(
                     {
@@ -21,7 +25,19 @@ exports.login = async function (req,res){
             }
             let user_type = user.user_type.user_type;
             if(user){
+                console.log('Before bcrypt.compare block');
                 bcrypt.compare(password,user.password,async(error,auth)=>{
+                    console.log('Inside bcrypt.compare block');
+                    if (error) {
+                        console.error("An error occurred during password comparison:", error);
+                        let response = error_function({
+                          status: 500,
+                          message: "Internal server error"
+                        });
+                        res.status(response.statusCode).send(response);
+                        return;
+                      }
+                      console.log('Password comparison result:', auth);
                     if(auth=== true){
                         let access_token = jwt.sign(
                             {user_id : user_id},
@@ -57,12 +73,17 @@ exports.login = async function (req,res){
             }
 
         }
-    }catch (error) {
-        if(process.env.NODE_ENV =="prouction"){
-            let response = error_function({
-                status :400,
-                message: error ?error.message?error.message : error:"something went wrong",
-            });
-        }
+    } catch (error) {
+        console.error("An error occurred during login:", error);
+        console.log("Axios response:", error.response); // Add this line to log the Axios response details
+    
+        let response = error_function({
+            status: 500,
+            message: error ? error.message : "Internal server error",
+        });
+    
+        res.status(response.statusCode).send(response);
+        return;
     }
+    
 }
