@@ -1,5 +1,5 @@
-let success_function = require('../utils/response-handler').success_function;
-let error_function = require('../utils/response-handler').error_function;
+let success_function = require('../Utils/response-handler').success_function;
+let error_function = require('../Utils/response-handler').error_function;
 const users=require('../db/models/users');
 let jwt =require('jsonwebtoken');
 let bcrypt=require('bcryptjs');

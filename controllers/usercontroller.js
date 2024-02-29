@@ -2,8 +2,8 @@ const users=require('../db/models/users');
 const mongoose=require('mongoose');
 const bcrypt=require('bcryptjs');
 const { response } = require('express');
-const success_function=require('../utils/response-handler').success_function;
-const error_function=require('../utils/response-handler').error_function;
+const success_function=require('../Utils/response-handler').success_function;
+const error_function=require('../Utils/response-handler').error_function;
 
 
 exports.addUser=async function(req,res){
