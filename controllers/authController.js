@@ -22,7 +22,8 @@ exports.login = async function (req, res) {
             })
 
             if (!user) {
-                let response = error_function({ "status": 400, "message": "Invalid Email" });
+                let response = error_function({ statusCode: 400, 
+                    message: "Invalid Email" });
                 res.status(response.statusCode).send(response);
                 return;
             }
