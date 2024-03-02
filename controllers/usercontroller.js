@@ -25,7 +25,8 @@ exports.addUser=async function(req,res){
             statusCode:400,
            message:('User Already Exixts')
           });
-          res.status(response.statusCode).send(response.message);
+          console.log("response is ",response)
+          res.status(response.statusCode).send(response);
             return;  
         }
 
@@ -59,12 +60,14 @@ exports.addUser=async function(req,res){
                 message:"success"
             });
             res.status(response.statusCode).send(response)
+            return;
         }else{
             response=error_function({
                 statusCode:400,
                 message:"failed"
             });
             res.status(response.statusCode).send(response)
+            return
         }
     } catch (error) {
         let response=error_function({
@@ -72,6 +75,7 @@ exports.addUser=async function(req,res){
             message:"user creation failed"
         });
         res.status(response.statusCode).send(response)
+        
     }
 }
 
