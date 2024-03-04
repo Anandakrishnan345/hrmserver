@@ -48,7 +48,7 @@ exports.login = async function (req, res) {
                 } else {
                         let response = error_function({
                             statusCode: 401,
-                            message: "invalid credentials"
+                            message: "invalid password"
                         });
                         res.status(response.statusCode).send(response);
                         return;

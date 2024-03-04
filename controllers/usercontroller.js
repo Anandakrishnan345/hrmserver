@@ -72,7 +72,8 @@ exports.addUser=async function(req,res){
     } catch (error) {
         let response=error_function({
             statusCode:400,
-            message:"user creation failed"
+            message:"user creation failed",
+            data:error
         });
         res.status(response.statusCode).send(response)
         
