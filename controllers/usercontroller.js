@@ -17,12 +17,13 @@ exports.addUser=async function(req,res){
         const Address=req.body.Address;
         const pincode =req.body.pincode;
 
+
         
         // Check if the password is empty
         if (!password || password.trim() === '' || password.length < 6 || password.length > 20 || /\s/.test(password)) {
             let response = error_function({
                 statusCode: 400,
-                message: 'Password must be between 6 and 20 characters long and should not contain spaces'
+                message: 'Password 6-20 characters only-should no spaces allowed'
             });
             res.status(response.statusCode).send(response);
             return;
@@ -81,10 +82,10 @@ exports.addUser=async function(req,res){
             return
         }
     } catch (error) {
+
         let response=error_function({
             statusCode:400,
-            message:"user creation failed",
-            data:error
+            message: error.message?error.message:"Something went wrong",
         });
         res.status(response.statusCode).send(response)
         
@@ -201,6 +202,7 @@ exports.updateUser = async function (req, res) {
         // Check if the provided id is a valid ObjectId using Mongoose
         if (!mongoose.Types.ObjectId.isValid(id)) {
             const response = {
+                
                 statusCode: 400,
                 message: 'Invalid user ID format',
             };
