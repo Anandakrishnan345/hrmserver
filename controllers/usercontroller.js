@@ -1,7 +1,7 @@
 const users=require('../db/models/users');
 const mongoose=require('mongoose');
 const bcrypt=require('bcryptjs');
-const { response } = require('express');
+const { response, request } = require('express');
 const success_function=require('../Utils/response-handler').success_function;
 const error_function=require('../Utils/response-handler').error_function;
 
@@ -16,6 +16,17 @@ exports.addUser=async function(req,res){
         const phonenumber=req.body.phonenumber;
         const Address=req.body.Address;
         const pincode =req.body.pincode;
+
+        
+        // Check if the password is empty
+        if (!password || password.trim() === '' || password.length < 6 || password.length > 20 || /\s/.test(password)) {
+            let response = error_function({
+                statusCode: 400,
+                message: 'Password must be between 6 and 20 characters long and should not contain spaces'
+            });
+            res.status(response.statusCode).send(response);
+            return;
+        }
 
         const isUserExist =await users.findOne({email});
         console.log("isUserExist : ",isUserExist);
@@ -106,6 +117,171 @@ exports.getuser = async function (req, res) {
         const response = {
             statusCode: 500,
             message: "Internal server error"
+        };
+        res.status(500).send(response);
+    }
+}
+
+
+exports.viewuser = async function (req, res) {
+    try {
+        const { id } = req.params;
+
+        // Check if the provided id is a valid ObjectId using Mongoose
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            const response = {
+                statusCode: 400,
+                message: 'Invalid user ID format',
+            };
+            return res.status(400).send(response);
+        }
+
+        // Use findById method from Mongoose
+        const oneUser = await users.findById(id);
+
+        if (!oneUser) {
+            const response = {
+                statusCode: 404,
+                message: 'User not found',
+            };
+            return res.status(404).send(response);
+        }
+
+        const response = {
+            statusCode: 200,
+            message: 'Success',
+            data: oneUser,
+        };
+        res.status(200).send(response);
+    } catch (error) {
+        console.log('oneUser error is:', error.message);
+        const response = {
+            statusCode: 400,
+            message: error.message,
+        };
+        res.status(500).send(response);
+    }
+};
+
+// exports.updateUser = async function (req, res) {
+
+//     try {
+//         const { id } = req.params;
+//         const result = await users.findByIdAndUpdate(id,req.body);
+//         if(!result){
+//             const response = {
+//                 statusCode: 404,
+//                 message: 'User not found',
+//             };
+//             return res.status(404).send(response);
+                
+
+//         }
+//         const response = {
+//             statusCode: 200,
+//             message: 'Update Success',
+//             data: result,
+//         };
+//         res.status(200).send(response); 
+        
+//     }catch (error) {
+//         console.log('updateUser error is:', error.message);
+//         const response = {
+//             statusCode: 400,
+//             message: error.message,
+//         };
+//         res.status(500).send(response);
+//     }
+// }
+
+exports.updateUser = async function (req, res) {
+    try {
+        const { id } = req.params;
+
+        // Check if the provided id is a valid ObjectId using Mongoose
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            const response = {
+                statusCode: 400,
+                message: 'Invalid user ID format',
+            };
+            return res.status(400).send(response);
+        }
+
+        const existingUser = await users.findById(id);
+
+        if (!existingUser) {
+            const response = {
+                statusCode: 404,
+                message: 'User not found',
+            };
+            return res.status(404).send(response);
+        }
+
+        // Update user details individually, taking care of validation
+        if (req.body.email) {
+            // If email is being updated, validate uniqueness
+            const isEmailTaken = await users.findOne({ email: req.body.email, _id: { $ne: id } });
+            if (isEmailTaken) {
+                const response = {
+                    statusCode: 400,
+                    message: 'Email is already taken',
+                };
+                return res.status(400).send(response);
+            }
+            existingUser.email = req.body.email;
+        }
+
+        // Update other user details
+        existingUser.name = req.body.name || existingUser.name;
+        existingUser.phonenumber = req.body.phonenumber || existingUser.phonenumber;
+        existingUser.Address = req.body.Address || existingUser.Address;
+        existingUser.pincode = req.body.pincode || existingUser.pincode;
+
+        // If you have additional fields, update them in a similar manner
+
+        // Save the updated user, triggering validation
+        const result = await existingUser.save();
+
+        const response = {
+            statusCode: 200,
+            message: 'Update Success',
+            data: result,
+        };
+        res.status(200).send(response);
+    } catch (error) {
+        console.log('updateUser error is:', error.message);
+        const response = {
+            statusCode: 400,
+            message: error.message,
+        };
+        res.status(500).send(response);
+    }
+};
+
+
+exports.deleteUser = async function (req, res) {
+    try {
+        const { id } = req.params;
+        const result = await users.findByIdAndDelete(id);
+        if(!result){
+            const response = {
+                statusCode: 404,
+                message: 'User not found',
+            };
+            return res.status(404).send(response);
+
+        }
+        const response = {
+            statusCode: 200,
+            message: 'Delete Success',
+            data: result,
+        };
+        res.status(200).send(response);
+    }catch (error) {
+        console.log('deleteUser error is:', error.message);
+        const response = {
+            statusCode: 400,
+            message: error.message,
         };
         res.status(500).send(response);
     }
