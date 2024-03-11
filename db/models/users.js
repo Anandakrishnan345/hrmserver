@@ -8,6 +8,7 @@
 //             Address:"string",
 //             pincode:"string",
 //             password:"string",
+//             user_type: { type: mongoose.Schema.Types.ObjectId, ref: "user_types" },
             
 //     }
 // )
@@ -72,7 +73,8 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Password is required'],
             
-        }
+        },
+            user_type: { type: mongoose.Schema.Types.ObjectId, ref: "user_types" },
     }
 );
 

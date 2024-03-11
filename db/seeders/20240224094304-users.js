@@ -9,10 +9,13 @@ module.exports = {
         _id:"65d9beea8984305a6d73fba8",
         name:"Anandan",
         email:"ckanandu@gmail.com",
-        phonenumber:"789556412",
+        phonenumber:"7895564120",
         Address:"4th street  kochi",
         pincode:"682006",
-        password:"$2y$10$/2HvfjEpArEciF.WWFaQiu25Z9BYJowMrzrq0WrlL1SRCIetKA4zW"//admin123
+        password:"$2y$10$/2HvfjEpArEciF.WWFaQiu25Z9BYJowMrzrq0WrlL1SRCIetKA4zW",//admin123
+        user_type:"65eecb8e18357aefe2c8f15b"
+
+
       },
      
     ])

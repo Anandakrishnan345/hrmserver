@@ -29,6 +29,8 @@ exports.addUser=async function(req,res){
             return;
         }
 
+        let user_types_id ="65eecbcb18357aefe2c8f15c";//employee id (seed)
+
         const isUserExist =await users.findOne({email});
         console.log("isUserExist : ",isUserExist);
 
@@ -54,7 +56,9 @@ exports.addUser=async function(req,res){
             password:hashed_password,
             phonenumber,
             Address,
-            pincode
+            pincode,
+            user_type: user_types_id
+
         });
         let response_obj={
            name,
