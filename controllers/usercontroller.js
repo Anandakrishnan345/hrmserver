@@ -4,6 +4,8 @@ const bcrypt=require('bcryptjs');
 const { response, request } = require('express');
 const success_function=require('../Utils/response-handler').success_function;
 const error_function=require('../Utils/response-handler').error_function;
+const sendEmail=require('../Utils/sendEmail').sendEmail;
+const set_password = require('../Utils/set_password').resetPassword;
 
 
 exports.addUser=async function(req,res){
@@ -20,14 +22,14 @@ exports.addUser=async function(req,res){
 
         
         // Check if the password is empty
-        if (!password || password.trim() === '' || password.length < 6 || password.length > 20 || /\s/.test(password)) {
-            let response = error_function({
-                statusCode: 400,
-                message: 'Password 6-20 characters only-should no spaces allowed'
-            });
-            res.status(response.statusCode).send(response);
-            return;
-        }
+        // if (!password || password.trim() === '' || password.length < 6 || password.length > 20 || /\s/.test(password)) {
+        //     let response = error_function({
+        //         statusCode: 400,
+        //         message: 'Password 6-20 characters only-should no spaces allowed'
+        //     });
+        //     res.status(response.statusCode).send(response);
+        //     return;
+        // }
 
         let user_types_id ="65eecbcb18357aefe2c8f15c";//employee id (seed)
 
@@ -44,10 +46,27 @@ exports.addUser=async function(req,res){
             return;  
         }
 
+        //generating random password
+        function generateRandomPassword(length) {
+            let charset =
+              "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$";
+            let password = "";
+  
+            for (var i = 0; i < length; i++) {
+              var randomIndex = Math.floor(Math.random() * charset.length);
+              password += charset.charAt(randomIndex);
+            }
+  
+            return password;
+          }
+  
+          var randomPassword = generateRandomPassword(12);
+          console.log('random password',randomPassword);
+
         let salt=await bcrypt.genSalt(10);
         console.log("salt : ",salt);
 
-        let hashed_password=bcrypt.hashSync(password,salt);
+        let hashed_password=bcrypt.hashSync(randomPassword,salt);
         console.log("hashed_password : ",hashed_password);
 
         const new_user=await users.create({
@@ -70,6 +89,10 @@ exports.addUser=async function(req,res){
         }
 
         if(new_user){
+            let email_template = await set_password(name,email,randomPassword);
+            await sendEmail(email,"password",email_template);
+            console.log("Email sented...");
+
             let response=success_function({
                 statusCode:201,
                 data:new_user,
