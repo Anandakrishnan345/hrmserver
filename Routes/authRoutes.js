@@ -1,8 +1,17 @@
 const express=require('express');
 const router=express.Router();
+const accessControl =require('../Utils/access-control').accessControl;
 
 const authController=require('../controllers/authController');
 
-router.post('/login',authController.login);
+const setAccessControl = (access_type) => {
+    return (req, res, next) => {
+        accessControl(access_type, req, res, next)
+    }
+};
+
+router.post('/login',setAccessControl('*') ,authController.login);
+router.post('/forgot-password',setAccessControl('*') ,authController.forgotPasswordController);
+// router.patch('/reset-password', setAccessControl('*') ,authController.passwordResetController);
 
 module.exports = router;

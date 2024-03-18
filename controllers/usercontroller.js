@@ -273,6 +273,7 @@ exports.updateUser = async function (req, res) {
 
         const response = {
             statusCode: 200,
+            success:true,
             message: 'Update Success',
             data: result,
         };
