@@ -176,16 +176,95 @@ exports.forgotPasswordController = async function (req, res) {
     }
   }
 };
+// exports.passwordResetController = async function (req, res) {
+//   try {
+//     const authHeader = req.headers["authorization"];
+//     const token = authHeader.split(" ")[1];
+
+//     let password = req.body.password;
+
+//     decoded = jwt.decode(token);
+//     console.log("user_id : ", decoded.user_id);
+//     console.log("Decoded token: ", decoded); // Log decoded token
+//     console.log("Token : ", token);
+//     let user = await users.findOne({
+//       $and: [{ _id: decoded.user_id }, { password_token: token }],
+//     });
+//     if (user) {
+//       let salt = bcrypt.genSaltSync(10);
+//       let password_hash = bcrypt.hashSync(password, salt);
+//       let data = await users.updateOne(
+//         { _id: decoded.user_id },
+//         { $set: { password: password_hash, password_token: null } }
+//       );
+//       if (data.matchedCount === 1 && data.modifiedCount == 1) {
+//         let response = success_function({
+//           statusCode: 200,
+//           message: "Password changed successfully",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       } else if (data.matchedCount === 0) {
+//         let response = error_function({
+//           statusCode: 404,
+//           message: "User not found",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       } else {
+//         let response = error_function({
+//           statusCode: 400,
+//           message: "Password reset failed",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       }
+//     } else {
+//       let response = error_function({ status: 403, message: "Forbidden" });
+//       res.status(response.statusCode).send(response);
+//       return;
+//     }
+//   } catch (error) {
+//     if (process.env.NODE_ENV == "production") {
+//       let response = error_function({
+//         statusCode: 400,
+//         message: error
+//           ? error.message
+//             ? error.message
+//             : error
+//           : "Something went wrong",
+//       });
+
+//       res.status(response.statusCode).send(response);
+//       return;
+//     } else {
+//       let response = error_function({ statusCode: 400, message: error });
+//       res.status(response.statusCode).send(response);
+//       return;
+//     }
+//   }
+// };
 exports.passwordResetController = async function (req, res) {
   try {
     const authHeader = req.headers["authorization"];
+    if (!authHeader) {
+      console.log("Authorization header not found");
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
     const token = authHeader.split(" ")[1];
+    console.log("Received token: ", token);
 
     let password = req.body.password;
 
     decoded = jwt.decode(token);
-    console.log("user_id : ", decoded.user_id);
+    console.log("Decoded token: ", decoded); // Log decoded token
     console.log("Token : ", token);
+    if (!decoded || !decoded.user_id) {
+      console.log("User ID not found in decoded token");
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     let user = await users.findOne({
       $and: [{ _id: decoded.user_id }, { password_token: token }],
     });
@@ -198,35 +277,36 @@ exports.passwordResetController = async function (req, res) {
       );
       if (data.matchedCount === 1 && data.modifiedCount == 1) {
         let response = success_function({
-          status: 200,
+          statusCode: 200,
           message: "Password changed successfully",
         });
         res.status(response.statusCode).send(response);
         return;
       } else if (data.matchedCount === 0) {
         let response = error_function({
-          status: 404,
+          statusCode: 404,
           message: "User not found",
         });
         res.status(response.statusCode).send(response);
         return;
       } else {
         let response = error_function({
-          status: 400,
+          statusCode: 400,
           message: "Password reset failed",
         });
         res.status(response.statusCode).send(response);
         return;
       }
     } else {
-      let response = error_function({ status: 403, message: "Forbidden" });
+      let response = error_function({ statusCode: 403, message: "Forbidden" });
       res.status(response.statusCode).send(response);
       return;
     }
   } catch (error) {
+    console.error("Error: ", error);
     if (process.env.NODE_ENV == "production") {
       let response = error_function({
-        status: 400,
+        statusCode: 400,
         message: error
           ? error.message
             ? error.message
@@ -237,7 +317,7 @@ exports.passwordResetController = async function (req, res) {
       res.status(response.statusCode).send(response);
       return;
     } else {
-      let response = error_function({ status: 400, message: error });
+      let response = error_function({ statusCode: 400, message: error });
       res.status(response.statusCode).send(response);
       return;
     }
