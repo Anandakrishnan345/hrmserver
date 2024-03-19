@@ -144,7 +144,7 @@ exports.forgotPasswordController = async function (req, res) {
           return;
         }
       } else {
-        let response = error_function({ status: 403, message: "Forbidden" });
+        let response = error_function({ statusCode: 403, message:"Forbidden" });
         res.status(response.statusCode).send(response);
         return;
       }
