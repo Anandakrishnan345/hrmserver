@@ -381,3 +381,35 @@ exports.passwordResetController = async function (req, res) {
     }
   }
 };
+exports.changePassword = async (req, res) => {
+  const { email } = req.params;
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+      // Find user by email
+      const user = await users.findOne({ email });
+
+      // Check if user exists
+      if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check if old password matches
+      const passwordMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!passwordMatch) {
+          return res.status(401).json({ error: 'Incorrect old password' });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      user.password = hashedPassword;
+      await user.save();
+
+      return res.status(200).json({ message: 'Password changed successfully' });
+  } catch (err) {
+      console.error('Error changing password:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+};
