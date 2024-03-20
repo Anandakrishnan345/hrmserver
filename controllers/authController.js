@@ -7,101 +7,156 @@ let jwt = require("jsonwebtoken");
 let bcrypt = require("bcryptjs");
 let dotenv = require("dotenv");
 dotenv.config();
+const user_types = require("../db/models/user_types");
+
+// exports.login = async function (req, res) {
+//   try {
+//     let email = req.body.email;
+//     let password = req.body.password;
+
+//     if (email && password) {
+//       let user = await users.findOne({
+//         $and: [{ email: email }],
+//       });
+
+//       if (!user) {
+//         let response = error_function({
+//           statusCode: 400,
+//           message: "Invalid Email",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       }
+
+//       if (user) {
+//         let db_password = user.password;
+//         console.log("db_password : ", db_password);
+
+//         bcrypt.compare(password, db_password, (err, auth) => {
+//           if (auth === true) {
+//             let access_token = jwt.sign(
+//               { user_id: user._id },
+//               process.env.PRIVATE_KEY,
+//               { expiresIn: "1d" }
+//             );
+//             console.log("access_token : ", access_token);
+
+//             let response = success_function({
+//               statusCode: 200,
+//               data: access_token,
+//               message: "Login Successfull",
+//             });
+//             res.status(response.statusCode).send(response);
+//             return;
+//           } else {
+//             let response = error_function({
+//               statusCode: 401,
+//               message: "invalid password",
+//             });
+//             res.status(response.statusCode).send(response);
+//             return;
+//           }
+//         });
+//       } else {
+//         let response = error_function({
+//           statusCode: 401,
+//           message: "invalid Credentials",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       }
+//     } else {
+//       if (!email) {
+//         let response = error_function({
+//           statusCode: 422,
+//           message: "email is required",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       }
+
+//       if (!password) {
+//         let response = success_function({
+//           statusCode: 422,
+//           message: "password required",
+//         });
+//         res.status(response.statusCode).send(response);
+//         return;
+//       }
+//     }
+//   } catch (error) {
+//     if (process.env.NODE_ENV == "production") {
+//       let response = error_function({
+//         statusCode: 400,
+//         message: error
+//           ? error.message
+//             ? error.message
+//             : error
+//           : "something went wrong",
+//       });
+//       res.status(response.statusCode).send(response);
+//       return;
+//     } else {
+//       let response = error_function({ status: 400, message: error });
+//       res.status(response.statusCode).send(response);
+//       return;
+//     }
+//   }
+// };
+
 
 exports.login = async function (req, res) {
   try {
-    let email = req.body.email;
-    let password = req.body.password;
+    const { email, password } = req.body;
 
-    if (email && password) {
-      let user = await users.findOne({
-        $and: [{ email: email }],
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
+
+    const user = await users.findOne({ email: email });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid Email" });
+    }
+
+    const db_password = user.password;
+    console.log("userpassword", password);
+    const auth = await bcrypt.compare(password, db_password);
+
+    if (auth) {
+      const userType = await user_types.findOne({ _id: user.user_type });
+      console.log("usertype", userType);
+
+      if (!userType) {
+        console.log("no user type");
+        return res.status(400).json({ message: "User type not found" });
+      }
+
+      const access_token = jwt.sign(
+        { user_id: user._id, user_type: userType.user_type },
+        process.env.PRIVATE_KEY,
+        { expiresIn: "1d" }
+      );
+
+      // Sending the response with access token and user data
+      return res.status(200).json({
+        success: true,
+        statusCode: 200,
+        data: { user, access_token },
+        message: "Login Successfull",
       });
-
-      if (!user) {
-        let response = error_function({
-          statusCode: 400,
-          message: "Invalid Email",
-        });
-        res.status(response.statusCode).send(response);
-        return;
-      }
-
-      if (user) {
-        let db_password = user.password;
-        console.log("db_password : ", db_password);
-
-        bcrypt.compare(password, db_password, (err, auth) => {
-          if (auth === true) {
-            let access_token = jwt.sign(
-              { user_id: user._id },
-              process.env.PRIVATE_KEY,
-              { expiresIn: "1d" }
-            );
-            console.log("access_token : ", access_token);
-
-            let response = success_function({
-              statusCode: 200,
-              data: access_token,
-              message: "Login Successfull",
-            });
-            res.status(response.statusCode).send(response);
-            return;
-          } else {
-            let response = error_function({
-              statusCode: 401,
-              message: "invalid password",
-            });
-            res.status(response.statusCode).send(response);
-            return;
-          }
-        });
-      } else {
-        let response = error_function({
-          statusCode: 401,
-          message: "invalid Credentials",
-        });
-        res.status(response.statusCode).send(response);
-        return;
-      }
     } else {
-      if (!email) {
-        let response = error_function({
-          statusCode: 422,
-          message: "email is required",
-        });
-        res.status(response.statusCode).send(response);
-        return;
-      }
-
-      if (!password) {
-        let response = success_function({
-          statusCode: 422,
-          message: "password required",
-        });
-        res.status(response.statusCode).send(response);
-        return;
-      }
+      return res.status(401).json({ message: "Invalid Password" });
     }
   } catch (error) {
-    if (process.env.NODE_ENV == "production") {
-      let response = error_function({
-        statusCode: 400,
-        message: error
-          ? error.message
-            ? error.message
-            : error
-          : "something went wrong",
-      });
-      res.status(response.statusCode).send(response);
-      return;
-    } else {
-      let response = error_function({ status: 400, message: error });
-      res.status(response.statusCode).send(response);
-      return;
-    }
+    console.error("Login failed:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 exports.forgotPasswordController = async function (req, res) {
   try {
     let email = req.body.email;
@@ -144,7 +199,10 @@ exports.forgotPasswordController = async function (req, res) {
           return;
         }
       } else {
-        let response = error_function({ statusCode: 403, message:"Forbidden" });
+        let response = error_function({
+          statusCode: 403,
+          message: "Forbidden",
+        });
         res.status(response.statusCode).send(response);
         return;
       }
@@ -251,7 +309,7 @@ exports.passwordResetController = async function (req, res) {
       console.log("Authorization header not found");
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     const token = authHeader.split(" ")[1];
     console.log("Received token: ", token);
 
