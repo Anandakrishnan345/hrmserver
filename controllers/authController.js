@@ -233,21 +233,24 @@ exports.login = async function (req, res) {
       return res.status(400).json({ message: "Invalid Email" });
     }
 
-    // Check if the user's password is the randomly generated password
-    const userType = await user_types.findOne({ _id: user.user_type });
-    const isRandomPassword = await bcrypt.compare(password, user.password);
+    // // Check if the user's password is the randomly generated password
+    // const userType = await user_types.findOne({ _id: user.user_type });
+    // const isRandomPassword = await bcrypt.compare(password, user.password);
 
-    // Variable to indicate if user is logging in with a random password and is not an admin
-    let requiresPasswordChange = false;
+    // // Variable to indicate if user is logging in with a random password and is not an admin
+    // let requiresPasswordChange = false;
 
-    if (isRandomPassword && userType.user_type !== 'admin') {
-      // If the user is logging in with the random password and is not an admin, set the variable to true
-      requiresPasswordChange = true;
-    }
+    // if (isRandomPassword && userType.user_type !== 'admin') {
+    //   // If the user is logging in with the random password and is not an admin, set the variable to true
+    //   requiresPasswordChange = true;
+    // }
 
     // Compare passwords
     const auth = await bcrypt.compare(password, user.password);
-
+let firstlogin =!user.lastLogin;
+if(firstlogin){
+  await users.updateOne({email:email},{$set:{lastLogin:new Date()}})
+}
     if (auth) {
       // Passwords match, proceed with login
       const userType = await user_types.findOne({ _id: user.user_type });
@@ -257,9 +260,9 @@ exports.login = async function (req, res) {
       }
 
       // Check if the user has changed their password
-      if (user.passwordChanged) {
-        requiresPasswordChange = false; // Reset the flag since the password has been changed
-      }
+      // if (user.passwordChanged) {
+      //   requiresPasswordChange = false; // Reset the flag since the password has been changed
+      // }
 
       const access_token = jwt.sign(
         { user_id: user._id, user_type: userType.user_type },
@@ -271,7 +274,7 @@ exports.login = async function (req, res) {
       return res.status(200).json({
         success: true,
         statusCode: 200,
-        data: { user, access_token, requiresPasswordChange },
+        data: { user, access_token, lastLogin:user.lastLogin},
         message: "Login successful",
       });
     } else {

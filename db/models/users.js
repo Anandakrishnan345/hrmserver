@@ -76,6 +76,7 @@ const userSchema = new mongoose.Schema(
         },
             user_type: { type: mongoose.Schema.Types.ObjectId, ref: "user_types" },
             password_token: "string",
+            lastLogin:{type:Date,default:null},
     }
 );
 
