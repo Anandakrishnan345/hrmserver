@@ -104,119 +104,7 @@ const user_types = require("../db/models/user_types");
 //   }
 // };
 
-// exports.login = async function (req, res) {
-//   try {
-//     const { email, password } = req.body;
 
-//     if (!email || !password) {
-//       return res
-//         .status(400)
-//         .json({ message: "Email and password are required" });
-//     }
-
-//     const user = await users.findOne({ email: email });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid Email" });
-//     }
-
-//     const db_password = user.password;
-//     console.log("userpassword", password);
-//     const auth = await bcrypt.compare(password, db_password);
-
-//     if (auth) {
-//       const userType = await user_types.findOne({ _id: user.user_type });
-//       console.log("usertype", userType);
-
-//       if (!userType) {
-//         console.log("no user type");
-//         return res.status(400).json({ message: "User type not found" });
-//       }
-
-//       const access_token = jwt.sign(
-//         { user_id: user._id, user_type: userType.user_type },
-//         process.env.PRIVATE_KEY,
-//         { expiresIn: "1d" }
-//       );
-
-//       // Sending the response with access token and user data
-//       return res.status(200).json({
-//         success: true,
-//         statusCode: 200,
-//         data: { user, access_token },
-//         message: "Login Successfull",
-//       });
-//     } else {
-//       return res.status(401).json({ message: "Invalid Password" });
-//     }
-//   } catch (error) {
-//     console.error("Login failed:", error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// exports.login = async function (req, res) {
-//   try {
-//     const { email, password } = req.body;
-
-//     if (!email || !password) {
-//       return res.status(400).json({ message: "Email and password are required" });
-//     }
-
-//     // Check if the user exists in the database
-//     const user = await users.findOne({ email: email });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid Email" });
-//     }
-
-//     // Check if the user's password is the randomly generated password
-//     const userType = await user_types.findOne({ _id: user.user_type });
-//     console.log(userType.user_type)
-//     const isRandomPassword = await bcrypt.compare(password, user.password);
-
-//     // Variable to indicate if user is logging in with a random password and is not an admin
-//     let requiresPasswordChange = false;
-
-//     if (isRandomPassword && userType.user_type !== 'admin') {
-//       console.log('usertype',userType.user_type)
-//       // If the user is logging in with the random password and is not an admin, set the variable to true
-//       requiresPasswordChange = true;
-//     }
-
-//     // Compare passwords
-//     const auth = await bcrypt.compare(password, user.password);
-
-//     if (auth) {
-//       // Passwords match, proceed with login
-//       const userType = await user_types.findOne({ _id: user.user_type });
-      
-//       if (!userType) {
-//         return res.status(400).json({ message: "User type not found" });
-//       }
-
-//       const access_token = jwt.sign(
-//         { user_id: user._id, user_type: userType.user_type },
-//         process.env.PRIVATE_KEY,
-//         { expiresIn: "1d" }
-//       );
-
-//       // Sending the response with access token, user data, and the requiresPasswordChange variable
-//       return res.status(200).json({
-//         success: true,
-//         statusCode: 200,
-//         data: { user, access_token, requiresPasswordChange },
-//         message: "Login successful",
-//       });
-//     } else {
-//       // Passwords do not match
-//       return res.status(401).json({ message: "Invalid Password" });
-//     }
-//   } catch (error) {
-//     console.error("Login failed:", error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 
 exports.login = async function (req, res) {
   try {
@@ -233,19 +121,7 @@ exports.login = async function (req, res) {
       return res.status(400).json({ message: "Invalid Email" });
     }
 
-    // // Check if the user's password is the randomly generated password
-    // const userType = await user_types.findOne({ _id: user.user_type });
-    // const isRandomPassword = await bcrypt.compare(password, user.password);
-
-    // // Variable to indicate if user is logging in with a random password and is not an admin
-    // let requiresPasswordChange = false;
-
-    // if (isRandomPassword && userType.user_type !== 'admin') {
-    //   // If the user is logging in with the random password and is not an admin, set the variable to true
-    //   requiresPasswordChange = true;
-    // }
-
-    // Compare passwords
+    
     const auth = await bcrypt.compare(password, user.password);
 let firstlogin =!user.lastLogin;
 if(firstlogin){
@@ -259,10 +135,7 @@ if(firstlogin){
         return res.status(400).json({ message: "User type not found" });
       }
 
-      // Check if the user has changed their password
-      // if (user.passwordChanged) {
-      //   requiresPasswordChange = false; // Reset the flag since the password has been changed
-      // }
+      
 
       const access_token = jwt.sign(
         { user_id: user._id, user_type: userType.user_type },
@@ -446,6 +319,10 @@ exports.passwordResetController = async function (req, res) {
     console.log("Received token: ", token);
 
     let password = req.body.password;
+    if (!password) {
+      console.log("Password cannot be empty");
+      return res.status(400).json({ message: "Password cannot be empty" });
+    }
 
     decoded = jwt.decode(token);
     console.log("Decoded token: ", decoded); // Log decoded token
@@ -538,10 +415,17 @@ exports.changePassword = async (req, res) => {
     // Update password
     user.password = hashedPassword;
     await user.save();
+    let response = ({
+      statusCode: 200,
+      success:true,
+      message: "Password changed successfully",
+    });
+    res.status(response.statusCode).send(response);
+    return;
 
-    return res.status(200).json({ message: "Password changed successfully" });
-  } catch (err) {
-    console.error("Error changing password:", err.message);
+    
+  } catch (error) {
+    console.error("Error changing password:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };

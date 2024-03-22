@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
                     // Check if the name contains only alphabets
                     return !/[^A-Za-z]/.test(value);
                 },
-                message: 'Name should be between 3 and 30 characters and should not contain numbers or special characters'
+                message: '3 and 30 characters,no numbers or special characters'
             }
         },
         
