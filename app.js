@@ -14,11 +14,13 @@ dotenv.config();
 connect();
 
 // Enable CORS for specific origin
-const corsOptions = {
-  origin: 'http://localhost:5173' // Allow requests from this origin
-};
+// const corsOptions = {
+//   origin: 'http://localhost:5173' // Allow requests from this origin
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+
+app.use(cors());
 
 // Parse JSON bodies
 app.use(express.json());
